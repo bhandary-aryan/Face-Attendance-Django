@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Assign Courses to {{ staff.user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-book me-2"></i> Assign Courses</h2>
+    <a href="{% url 'view_staff' %}" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left me-2"></i> Back to Staff List
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Staff Details</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Name:</strong> {{ staff.user.get_full_name }}</p>
+                <p><strong>Staff ID:</strong> {{ staff.staff_id }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Department:</strong> {{ staff.department.name }}</p>
+                <p><strong>Email:</strong> {{ staff.user.email }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Select Courses to Assign</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> Select all courses this instructor should teach. Hold down Ctrl (Windows) or Command (Mac) to select multiple courses.
+            </div>
+            
+            <div class="form-group mb-4">
+                <label for="courses" class="form-label">Courses</label>
+                <select name="courses" id="courses" class="form-control" multiple size="10">
+                    {% for course in all_courses %}
+                    <option value="{{ course.id }}" {% if course.id in assigned_course_ids %}selected{% endif %}>
+                        {{ course.code }} - {{ course.name }} ({{ course.department.name }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'view_staff' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i> Save Assignments
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    select[multiple] {
+        height: 300px;
+    }
+    
+    /* Highlight selected options */
+    select[multiple] option:checked {
+        background-color: #0d6efd;
+        color: white;
+    }
+</style>
+{% endblock %}

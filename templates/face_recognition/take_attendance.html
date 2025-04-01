@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Take Attendance - {{ class_schedule.course.code }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-camera me-2"></i> 
+        Face Recognition Attendance
+    </h2>
+    <a href="{% url 'view_attendance' class_schedule.id %}" class="btn btn-outline-primary">
+        <i class="fas fa-clipboard-list me-2"></i> View Attendance Records
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5 class="mb-0">{{ class_schedule.course.code }} - {{ class_schedule.course.name }}</h5>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <span class="badge bg-primary">{{ class_schedule.get_day_of_week_display }}</span>
+                <span class="badge bg-info">{{ class_schedule.start_time }} - {{ class_schedule.end_time }}</span>
+                <span class="badge bg-secondary">Room: {{ class_schedule.room }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Start Face Recognition</h5>
+                </div>
+                <div class="card-body text-center">
+                    <p>Click the button below to start face recognition for this class. The system will:</p>
+                    <ul class="text-start mb-4">
+                        <li>Open the camera and start face detection</li>
+                        <li>Automatically recognize enrolled students</li>
+                        <li>Mark attendance based on recognition confidence</li>
+                        <li>Display recognized students on screen</li>
+                    </ul>
+                    
+                    <button type="submit" class="btn btn-lg btn-primary">
+                        <i class="fas fa-camera me-2"></i> Start Face Recognition
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Instructions</h5>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li>Click "Start Face Recognition" to begin.</li>
+                        <li>Make sure students position their faces clearly in front of the camera.</li>
+                        <li>The system will automatically detect and recognize students.</li>
+                        <li>Recognized students will be displayed on screen.</li>
+                        <li>Press 'q' to finish the recognition process.</li>
+                        <li>The system will automatically save attendance records.</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Alternative Methods</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'mark_attendance_manually' class_schedule.id %}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-edit me-2"></i> Mark Attendance Manually
+                    </a>
+                    <a href="{% url 'view_attendance' class_schedule.id %}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-eye me-2"></i> View Current Attendance
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

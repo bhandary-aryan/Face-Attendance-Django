@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mark Attendance - {{ class_schedule.course.code }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-edit me-2"></i> 
+        Mark Attendance: {{ class_schedule.course.code }} - {{ class_schedule.course.name }}
+    </h2>
+    <a href="{% url 'view_attendance' class_schedule.id %}" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left me-2"></i> Back to Attendance Records
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5 class="mb-0">Class Details</h5>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <span class="badge bg-primary">{{ class_schedule.get_day_of_week_display }}</span>
+                <span class="badge bg-info">{{ class_schedule.start_time }} - {{ class_schedule.end_time }}</span>
+                <span class="badge bg-secondary">Room: {{ class_schedule.room }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Student Attendance</h5>
+            <div>
+                <label for="date" class="me-2">Date:</label>
+                <input type="date" name="date" id="date" class="form-control d-inline-block" style="width: auto;" value="{{ today|date:'Y-m-d' }}" required>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if enrolled_students %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in enrolled_students %}
+                        <tr>
+                            <td>
+                                {{ student.student_id }}
+                                <input type="hidden" name="student_id" value="{{ student.id }}">
+                            </td>
+                            <td>{{ student.user.get_full_name }}</td>
+                            <td>
+                                <div class="d-flex justify-content-center">
+                                    <div class="btn-group" role="group">
+                                        <input type="radio" class="btn-check" name="status-{{ student.id }}" value="present" id="present-{{ student.id }}" autocomplete="off" checked>
+                                        <label class="btn btn-outline-success" for="present-{{ student.id }}">
+                                            <i class="fas fa-check-circle"></i> Present
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="status-{{ student.id }}" value="late" id="late-{{ student.id }}" autocomplete="off">
+                                        <label class="btn btn-outline-warning" for="late-{{ student.id }}">
+                                            <i class="fas fa-clock"></i> Late
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="status-{{ student.id }}" value="absent" id="absent-{{ student.id }}" autocomplete="off">
+                                        <label class="btn btn-outline-danger" for="absent-{{ student.id }}">
+                                            <i class="fas fa-times-circle"></i> Absent
+                                        </label>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-4 d-flex justify-content-between">
+                <a href="{% url 'view_attendance' class_schedule.id %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i> Save Attendance
+                </button>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> No students are enrolled in this course.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</form>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Prepare the form for submission
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect all status values
+            const statusInputs = [];
+            {% for student in enrolled_students %}
+            const status{{ student.id }} = document.querySelector('input[name="status-{{ student.id }}"]:checked').value;
+            statusInputs.push({
+                student_id: "{{ student.id }}",
+                status: status{{ student.id }}
+            });
+            {% endfor %}
+            
+            // Create hidden inputs for each status
+            statusInputs.forEach(item => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'status';
+                input.value = item.status;
+                form.appendChild(input);
+            });
+            
+            // Submit the form
+            form.submit();
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

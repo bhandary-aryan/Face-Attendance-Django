@@ -1,0 +1,135 @@
+/* General Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* Card Styles */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 0.5rem;
+    border: none;
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-top-left-radius: 0.5rem !important;
+    border-top-right-radius: 0.5rem !important;
+}
+
+/* Dashboard Styles */
+.stats-card {
+    transition: transform 0.3s;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.stats-icon {
+    font-size: 2rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+/* Table Styles */
+.table-responsive {
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.attendance-table th {
+    background-color: #f8f9fa;
+}
+
+.attendance-status-present {
+    color: #198754;
+    font-weight: bold;
+}
+
+.attendance-status-late {
+    color: #fd7e14;
+    font-weight: bold;
+}
+
+.attendance-status-absent {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Face Recognition Styles */
+.camera-container {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+#video-element {
+    width: 100%;
+    border-radius: 0.5rem;
+}
+
+.camera-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+/* Login and Registration Styles */
+.auth-container {
+    max-width: 500px;
+    margin: 5rem auto;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-logo {
+    font-size: 3rem;
+    color: #0d6efd;
+    margin-bottom: 1rem;
+}
+
+/* Analytics Dashboard */
+.analytics-filters {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.chart-container {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stats-card {
+        margin-bottom: 1rem;
+    }
+    
+    .camera-container {
+        max-width: 100%;
+    }
+}

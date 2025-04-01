@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load core_extras %}
+
+{% block title %}My Attendance Report{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-calendar-check me-2"></i> My Attendance Report</h2>
+    <a href="{% url 'student_dashboard' %}" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+    </a>
+</div>
+
+<!-- Filter Controls -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="course" class="form-label">Course</label>
+                <select name="course" id="course" class="form-control">
+                    <option value="">All Courses</option>
+                    {% for course in courses %}
+                    <option value="{{ course.id }}" {% if selected_course == course.id|stringformat:"i" %}selected{% endif %}>
+                        {{ course.code }} - {{ course.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="start_date" class="form-label">From Date</label>
+                <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-3">
+                <label for="end_date" class="form-label">To Date</label>
+                <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-2"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Attendance Summary</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="attendance-summary-chart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Attendance Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Total Classes:</span>
+                                <strong>{{ total_classes }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Present:</span>
+                                <strong class="text-success">{{ present_count }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Late:</span>
+                                <strong class="text-warning">{{ late_count }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Absent:</span>
+                                <strong class="text-danger">{{ absent_count }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <h5>Overall Attendance Rate</h5>
+                            <div class="display-4 text-center mb-2">{{ attendance_rate|floatformat:1 }}%</div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ attendance_rate }}%" aria-valuenow="{{ attendance_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Records -->
+<div class="card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Attendance Records</h5>
+        <span class="badge bg-primary">{{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}</span>
+    </div>
+    <div class="card-body">
+        {% if attendance_records %}
+        <div class="table-responsive">
+            <table class="table table-hover attendance-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Course</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance_records %}
+                    <tr>
+                        <td>{{ record.date|date:"M d, Y" }} ({{ record.date|date:"l" }})</td>
+                        <td>{{ record.class_schedule.course.code }} - {{ record.class_schedule.course.name }}</td>
+                        <td>{{ record.time_in }}</td>
+                        <td>
+                            <span class="badge {% if record.status == 'present' %}bg-success{% elif record.status == 'late' %}bg-warning{% else %}bg-danger{% endif %}">
+                                {{ record.status|capfirst }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> No attendance records found for the selected period.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Attendance summary chart
+        const ctx = document.getElementById('attendance-summary-chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Present', 'Late', 'Absent'],
+                datasets: [{
+                    data: [{{ present_count }}, {{ late_count }}, {{ absent_count }}],
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.7)',  // Present - green
+                        'rgba(255, 193, 7, 0.7)',  // Late - yellow
+                        'rgba(220, 53, 69, 0.7)'   // Absent - red
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

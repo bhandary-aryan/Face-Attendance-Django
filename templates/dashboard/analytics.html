@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Analytics{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-chart-bar me-2"></i> Attendance Analytics</h2>
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="analytics-filters">
+    <form method="get" class="row g-3">
+        <div class="col-md-4">
+            <label for="department" class="form-label">Department</label>
+            <select name="department" id="department" class="form-control">
+                <option value="">All Departments</option>
+                {% for department in departments %}
+                <option value="{{ department.id }}" {% if selected_department == department.id|stringformat:"i" %}selected{% endif %}>
+                    {{ department.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="course" class="form-label">Course</label>
+            <select name="course" id="course" class="form-control">
+                <option value="">All Courses</option>
+                {% for course in courses %}
+                <option value="{{ course.id }}" {% if selected_course == course.id|stringformat:"i" %}selected{% endif %}>
+                    {{ course.code }} - {{ course.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-filter me-2"></i> Apply Filters
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="chart-container">
+            <h5 class="mb-3">Attendance by Status</h5>
+            <canvas id="status-chart" height="250"></canvas>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="chart-container">
+            <h5 class="mb-3">Attendance by Day of Week</h5>
+            <canvas id="day-of-week-chart" height="250"></canvas>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="chart-container">
+            <h5 class="mb-3">Monthly Attendance Trend</h5>
+            <canvas id="month-chart" height="250"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="chart-container">
+            <h5 class="mb-3">Attendance Rate by Course</h5>
+            <canvas id="course-chart" height="300"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="chart-container">
+            <h5 class="mb-3">Top 10 Students by Attendance Rate</h5>
+            <canvas id="student-chart" height="300"></canvas>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Convert Django data to JavaScript
+        const statusStats = {{ status_stats|safe }};
+        const dayOfWeekStats = {{ day_of_week_stats|safe }};
+        const monthStats = {{ month_stats|safe }};
+        const courseStats = {{ course_stats|safe }};
+        const studentStats = {{ student_stats|safe }};
+        
+        // Day of week mapping
+        const dayOfWeekNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        
+        // Status distribution chart
+        new Chart(document.getElementById('status-chart'), {
+            type: 'pie',
+            data: {
+                labels: statusStats.map(item => item.status.charAt(0).toUpperCase() + item.status.slice(1)),
+                datasets: [{
+                    data: statusStats.map(item => item.count),
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.7)',  // Present - green
+                        'rgba(255, 193, 7, 0.7)',  // Late - yellow
+                        'rgba(220, 53, 69, 0.7)'   // Absent - red
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+        // Day of week chart
+        new Chart(document.getElementById('day-of-week-chart'), {
+            type: 'bar',
+            data: {
+                labels: dayOfWeekStats.map(item => dayOfWeekNames[item.class_schedule__day_of_week]),
+                datasets: [{
+                    label: 'Attendance Count',
+                    data: dayOfWeekStats.map(item => item.count),
+                    backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Monthly trend chart
+        new Chart(document.getElementById('month-chart'), {
+            type: 'line',
+            data: {
+                labels: monthStats.map(item => item.month),
+                datasets: [{
+                    label: 'Attendance Count',
+                    data: monthStats.map(item => item.count),
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Course attendance rate chart
+        new Chart(document.getElementById('course-chart'), {
+            type: 'bar',
+            data: {
+                labels: courseStats.map(item => item.course),
+                datasets: [{
+                    label: 'Attendance Rate (%)',
+                    data: courseStats.map(item => item.rate),
+                    backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+        
+        // Top students chart
+        new Chart(document.getElementById('student-chart'), {
+            type: 'horizontalBar',
+            data: {
+                labels: studentStats.map(item => item.student),
+                datasets: [{
+                    label: 'Attendance Rate (%)',
+                    data: studentStats.map(item => item.rate),
+                    backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load core_extras %}
+
+{% block title %}Student Dashboard - Face Attendance System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-tachometer-alt me-2"></i> Student Dashboard</h2>
+    <a href="{% url 'student_report' %}" class="btn btn-primary">
+        <i class="fas fa-calendar-check me-2"></i> View My Attendance
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card stats-card bg-primary text-white">
+            <div class="card-body d-flex align-items-center">
+                <div class="stats-icon bg-white text-primary">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-0">My Courses</h5>
+                    <h3 class="mb-0">{{ courses.count }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card bg-success text-white">
+            <div class="card-body d-flex align-items-center">
+                <div class="stats-icon bg-white text-success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-0">Present</h5>
+                    <h3 class="mb-0">{{ present_count }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card bg-warning text-white">
+            <div class="card-body d-flex align-items-center">
+                <div class="stats-icon bg-white text-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-0">Late</h5>
+                    <h3 class="mb-0">{{ late_count }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card bg-danger text-white">
+            <div class="card-body d-flex align-items-center">
+                <div class="stats-icon bg-white text-danger">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-0">Absent</h5>
+                    <h3 class="mb-0">{{ absent_count }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Today's Classes</h5>
+                <span class="badge bg-primary">{{ today|date:"l, F j, Y" }}</span>
+            </div>
+            <div class="card-body">
+                {% if today_classes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Course</th>
+                                <th>Time</th>
+                                <th>Room</th>
+                                <th>Instructor</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for class in today_classes %}
+                            <tr>
+                                <td>
+                                    <strong>{{ class.course.code }}</strong> - {{ class.course.name }}
+                                </td>
+                                <td>{{ class.start_time }} - {{ class.end_time }}</td>
+                                <td>{{ class.room }}</td>
+                                <td>{{ class.instructor.user.get_full_name }}</td>
+                                <td>
+                                    {% with status=class|get_attendance_status:student %}
+                                    {% if status == 'present' %}
+                                    <span class="badge bg-success">Present</span>
+                                    {% elif status == 'late' %}
+                                    <span class="badge bg-warning">Late</span>
+                                    {% elif status == 'marked' %}
+                                    <span class="badge bg-info">Not Started</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Absent</span>
+                                    {% endif %}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> You don't have any classes scheduled for today.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Attendance Records</h5>
+                <a href="{% url 'student_report' %}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if attendance_records %}
+                <div class="table-responsive">
+                    <table class="table table-hover attendance-table">
+                        <thead>
+                            <tr>
+                                <th>Course</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in attendance_records %}
+                            <tr>
+                                <td>{{ record.class_schedule.course.code }}</td>
+                                <td>{{ record.date }}</td>
+                                <td>{{ record.time_in }}</td>
+                                <td>
+                                    <span class="badge {% if record.status == 'present' %}bg-success{% elif record.status == 'late' %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ record.status|capfirst }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No attendance records found.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Attendance Summary</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="attendance-summary-chart" height="260"></canvas>
+                
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between">
+                        <div>Overall Attendance Rate:</div>
+                        <div><strong>{{ attendance_rate|floatformat:1 }}%</strong></div>
+                    </div>
+                    <div class="progress mt-2">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ attendance_rate }}%" aria-valuenow="{{ attendance_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">My Courses</h5>
+            </div>
+            <div class="card-body">
+                {% if courses %}
+                <ul class="list-group">
+                    {% for course in courses %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ course.code }}</strong>
+                            <div class="text-muted">{{ course.name }}</div>
+                        </div>
+                        <a href="{% url 'student_report' %}?course={{ course.id }}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="View Course Attendance">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> You don't have any courses assigned yet.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Attendance summary chart
+        const ctx = document.getElementById('attendance-summary-chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Present', 'Late', 'Absent'],
+                datasets: [{
+                    data: [{{ present_count }}, {{ late_count }}, {{ absent_count }}],
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.7)',  // Present - green
+                        'rgba(255, 193, 7, 0.7)',  // Late - yellow
+                        'rgba(220, 53, 69, 0.7)'   // Absent - red
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

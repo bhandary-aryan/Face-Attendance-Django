@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Registration - Face Attendance System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-graduate me-2"></i> Student Registration
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name *</label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.first_name.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name *</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.last_name.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.student_id.id_for_label }}" class="form-label">Student ID *</label>
+                                {{ form.student_id }}
+                                {% if form.student_id.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.student_id.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="department" class="form-label">Department *</label>
+                                <select name="department" id="department" class="form-control" required>
+                                    <option value="">Select Department</option>
+                                    {% for department in departments %}
+                                    <option value="{{ department.id }}">{{ department.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email Address *</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.email.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">Username *</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.username.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.password1.id_for_label }}" class="form-label">Password *</label>
+                                {{ form.password1 }}
+                                {% if form.password1.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.password1.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password *</label>
+                                {{ form.password2 }}
+                                {% if form.password2.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.password2.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.phone_number.id_for_label }}" class="form-label">Phone Number</label>
+                            {{ form.phone_number }}
+                            {% if form.phone_number.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.phone_number.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.address.id_for_label }}" class="form-label">Address</label>
+                            {{ form.address }}
+                            {% if form.address.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.address.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.profile_pic.id_for_label }}" class="form-label">Profile Picture (for face recognition) *</label>
+                            {{ form.profile_pic }}
+                            <div class="form-text">Please upload a clear front-facing photo of your face for the face recognition system.</div>
+                            {% if form.profile_pic.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.profile_pic.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="courses" class="form-label">Courses *</label>
+                            <select name="courses" id="courses" class="form-control" multiple required>
+                                <option value="">Loading courses...</option>
+                            </select>
+                            <div class="form-text">Hold Ctrl/Cmd to select multiple courses</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-2"></i> Register
+                            </button>
+                            <a href="{% url 'login' %}" class="btn btn-outline-secondary ms-2">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Dynamic course loading based on department selection
+    document.addEventListener('DOMContentLoaded', function() {
+        const departmentSelect = document.getElementById('department');
+        const coursesSelect = document.getElementById('courses');
+        
+        departmentSelect.addEventListener('change', function() {
+            const departmentId = this.value;
+            
+            // Clear current options
+            coursesSelect.innerHTML = '';
+            
+            if (departmentId) {
+                // Show loading message
+                coursesSelect.innerHTML = '<option value="">Loading courses...</option>';
+                
+                // Make AJAX request to get courses for this department
+                fetch(`/api/department/${departmentId}/courses/`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Clear loading message
+                        coursesSelect.innerHTML = '';
+                        
+                        if (data.length === 0) {
+                            // No courses found
+                            coursesSelect.innerHTML = '<option value="">No courses available for this department</option>';
+                        } else {
+                            // Add courses as options
+                            data.forEach(course => {
+                                const option = document.createElement('option');
+                                option.value = course.id;
+                                option.textContent = `${course.code} - ${course.name}`;
+                                coursesSelect.appendChild(option);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching courses:', error);
+                        coursesSelect.innerHTML = '<option value="">Error loading courses</option>';
+                    });
+            } else {
+                coursesSelect.innerHTML = '<option value="">Select a department first</option>';
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

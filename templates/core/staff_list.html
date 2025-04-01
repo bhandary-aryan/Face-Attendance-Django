@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-chalkboard-teacher me-2"></i> Staff Management</h2>
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Staff Members</h5>
+    </div>
+    <div class="card-body">
+        {% if staff_members %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Staff ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Assigned Courses</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for staff in staff_members %}
+                    <tr>
+                        <td>{{ staff.staff_id }}</td>
+                        <td>{{ staff.user.get_full_name }}</td>
+                        <td>{{ staff.department.name }}</td>
+                        <td>
+                            {% if staff.courses.count > 0 %}
+                            {% for course in staff.courses.all %}
+                            <span class="badge bg-info me-1">{{ course.code }}</span>
+                            {% endfor %}
+                            {% else %}
+                            <span class="text-muted">No courses assigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'assign_courses' staff.id %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-book me-1"></i> Assign Courses
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> No staff members found.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

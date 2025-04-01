@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Take Attendance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-camera me-2"></i> 
+        Take Attendance
+        {% if show_today_only %}
+        <span class="badge bg-primary ms-2">{{ day_name }}</span>
+        {% endif %}
+    </h2>
+    <div>
+        {% if show_today_only and all_classes.count > today_classes.count %}
+        <a href="{% url 'take_attendance' %}?show_all=true" class="btn btn-outline-primary me-2">
+            <i class="fas fa-calendar-alt me-2"></i> Show All Classes
+        </a>
+        {% elif not show_today_only %}
+        <a href="{% url 'take_attendance' %}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-calendar-day me-2"></i> Show Today's Classes
+        </a>
+        {% endif %}
+        <a href="{% url 'staff_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">
+            {% if show_today_only %}
+            Classes Scheduled for Today ({{ day_name }})
+            {% else %}
+            All Scheduled Classes
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if class_schedules %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Day</th>
+                        <th>Time</th>
+                        <th>Room</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for class in class_schedules %}
+                    <tr>
+                        <td>
+                            <strong>{{ class.course.code }}</strong> - {{ class.course.name }}
+                        </td>
+                        <td>{{ class.get_day_of_week_display }}</td>
+                        <td>{{ class.start_time }} - {{ class.end_time }}</td>
+                        <td>{{ class.room }}</td>
+                        <td>
+                            <a href="{% url 'take_attendance_class' class.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-camera me-2"></i> Take Attendance
+                            </a>
+                            <a href="{% url 'view_attendance' class.id %}" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye me-2"></i> View Records
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            {% if show_today_only %}
+            <i class="fas fa-info-circle me-2"></i> You don't have any classes scheduled for today ({{ day_name }}).
+            {% if all_classes.count > 0 %}
+            <div class="mt-3">
+                <a href="{% url 'take_attendance' %}?show_all=true" class="btn btn-outline-primary">
+                    <i class="fas fa-calendar-alt me-2"></i> Show All Classes
+                </a>
+            </div>
+            {% endif %}
+            {% else %}
+            <i class="fas fa-info-circle me-2"></i> You don't have any classes assigned to you.
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
