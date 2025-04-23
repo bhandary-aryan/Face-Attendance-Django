@@ -1,0 +1,355 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static admin_list log %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link href="https://cdn.jsdelivr.net/npm/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet">
+<style>
+    .dashboard-container {
+        padding: 2rem;
+        max-width: 100%;
+    }
+
+    .dashboard-header {
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .dashboard-title-section {
+        flex: 1;
+    }
+
+    .dashboard-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 0.5rem;
+    }
+
+    .dashboard-subtitle {
+        color: var(--gray-500);
+        font-size: 1rem;
+    }
+
+    .dashboard-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .dashboard-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .dashboard-btn i {
+        font-size: 1.25rem;
+    }
+
+    .dashboard-btn-primary {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+    }
+
+    .dashboard-btn-outline {
+        background: white;
+        color: var(--gray-700);
+        border: 1px solid var(--gray-200);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .stat-icon.purple { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+    .stat-icon.blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+    .stat-icon.green { background: linear-gradient(135deg, #10b981, #34d399); }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: var(--gray-500);
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .stat-detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-top: 1px solid var(--gray-200);
+    }
+
+    .stat-detail-label {
+        color: var(--gray-600);
+        font-size: 0.875rem;
+    }
+
+    .stat-detail-value {
+        font-weight: 500;
+        color: var(--gray-800);
+    }
+
+    .departments-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .department-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .department-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .department-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+
+    .progress-bar {
+        height: 8px;
+        background: var(--gray-200);
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    .progress-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+    }
+
+    .progress-stat {
+        text-align: center;
+    }
+
+    .progress-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+
+    .progress-label {
+        font-size: 0.875rem;
+        color: var(--gray-500);
+    }
+
+    @media (max-width: 1280px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid, .departments-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="dashboard-title-section">
+            <h1 class="dashboard-title">{% trans "Student Attendance Overview" %}</h1>
+            <p class="dashboard-subtitle">{% now "F j, Y" %}</p>
+        </div>
+        <div class="dashboard-actions">
+            <button class="dashboard-btn dashboard-btn-outline" onclick="exportData()">
+                <i class="bx bx-download"></i>
+                {% trans "Export Report" %}
+            </button>
+            <button class="dashboard-btn dashboard-btn-primary" onclick="location.href='../attendance/student/add/'">
+                <i class="bx bx-user-plus"></i>
+                {% trans "Add Student" %}
+            </button>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon purple">
+                    <i class="bx bxs-graduation"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ total_students }}</div>
+            <div class="stat-label">{% trans "Total Students" %}</div>
+            <div class="stat-details">
+                <div class="stat-detail-item">
+                    <span class="stat-detail-label">{% trans "Active" %}</span>
+                    <span class="stat-detail-value">{{ total_students }}</span>
+                </div>
+                <div class="stat-detail-item">
+                    <span class="stat-detail-label">{% trans "Departments" %}</span>
+                    <span class="stat-detail-value">{{ department_stats|length }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon blue">
+                    <i class="bx bx-check-circle"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ attendance_rate }}%</div>
+            <div class="stat-label">{% trans "Attendance Rate" %}</div>
+            <div class="stat-details">
+                <div class="stat-detail-item">
+                    <span class="stat-detail-label">{% trans "This Month" %}</span>
+                    <span class="stat-detail-value">{{ attendance_rate }}%</span>
+                </div>
+                <div class="stat-detail-item">
+                    <span class="stat-detail-label">{% trans "Status" %}</span>
+                    <span class="stat-detail-value {% if attendance_rate >= 75 %}text-success{% else %}text-danger{% endif %}">
+                        {% if attendance_rate >= 75 %}{% trans "Good" %}{% else %}{% trans "Needs Improvement" %}{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon green">
+                    <i class="bx bx-calendar-check"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ present_data|last }}</div>
+            <div class="stat-label">{% trans "Present Today" %}</div>
+            <div class="stat-details">
+                <div class="stat-detail-item">
+                    <span class="stat-detail-label">{% trans "Absent" %}</span>
+                    <span class="stat-detail-value">{{ absent_data|last }}</span>
+                </div>
+                <div class="stat-detail-item">
+                    <span class="stat-detail-label">{% trans "Total" %}</span>
+                    <span class="stat-detail-value">{{ total_students }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="departments-grid">
+        {% for dept in department_stats %}
+        <div class="department-card">
+            <div class="department-header">
+                <h3 class="department-title">{{ dept.name }}</h3>
+                <span class="department-value">{{ dept.percentage }}%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill {% cycle 'purple' 'blue' 'green' 'orange' %}" 
+                     style="width: {{ dept.percentage }}%"></div>
+            </div>
+            <div class="progress-stats">
+                <div class="progress-stat">
+                    <div class="progress-value">{{ dept.percentage }}%</div>
+                    <div class="progress-label">{% trans "Attendance" %}</div>
+                </div>
+                <div class="progress-stat">
+                    <div class="progress-value">{{ dept.students|default:"0" }}</div>
+                    <div class="progress-label">{% trans "Students" %}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    window.exportData = function() {
+        var csvContent = "Department,Attendance Rate,Total Students\n";
+        {% for dept in department_stats %}
+        csvContent += "{{ dept.name }},{{ dept.percentage }}%,{{ dept.students|default:'0' }}\n";
+        {% endfor %}
+        
+        var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement("a");
+        var url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "department_report.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+</script>
+{% endblock %}
+
+{% block sidebar %}{% endblock %} 

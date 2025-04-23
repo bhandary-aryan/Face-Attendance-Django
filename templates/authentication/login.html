@@ -1,6 +1,158 @@
 {% extends 'base.html' %}
 {% block title %}Login - Face Attendance System{% endblock %}
 
+{% block extra_css %}
+<style>
+    .auth-container {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .card {
+        width: 100%;
+        max-width: 400px;
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95);
+        transform: translateY(20px);
+        opacity: 0;
+        animation: slideUp 0.5s ease forwards;
+    }
+
+    @keyframes slideUp {
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .auth-logo {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+        background: linear-gradient(45deg, #007bff, #00ff88);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 20px rgba(0, 123, 255, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+        }
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+    }
+
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .btn-primary {
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        border-radius: 10px;
+        background: linear-gradient(45deg, #007bff, #00ff88);
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+    }
+
+    .btn-outline-primary {
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.1);
+    }
+
+    .input-group {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        z-index: 10;
+    }
+
+    .input-with-icon {
+        padding-left: 3rem;
+    }
+
+    .input-group:focus-within .input-icon {
+        color: #007bff;
+    }
+
+    .error-shake {
+        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes shake {
+        10%, 90% {
+            transform: translate3d(-1px, 0, 0);
+        }
+        20%, 80% {
+            transform: translate3d(2px, 0, 0);
+        }
+        30%, 50%, 70% {
+            transform: translate3d(-4px, 0, 0);
+        }
+        40%, 60% {
+            transform: translate3d(4px, 0, 0);
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="auth-container">
     <div class="card shadow">
@@ -13,11 +165,13 @@
                 <p class="text-muted">Sign in to your account</p>
             </div>
             
-            <form method="post">
+            <form method="post" id="loginForm">
                 {% csrf_token %}
                 
-                <div class="mb-3">
-                    <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+                <div class="input-group">
+                    <span class="input-icon">
+                        <i class="fas fa-user"></i>
+                    </span>
                     {{ form.username }}
                     {% if form.username.errors %}
                     <div class="invalid-feedback d-block">
@@ -26,8 +180,10 @@
                     {% endif %}
                 </div>
                 
-                <div class="mb-3">
-                    <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+                <div class="input-group">
+                    <span class="input-icon">
+                        <i class="fas fa-lock"></i>
+                    </span>
                     {{ form.password }}
                     {% if form.password.errors %}
                     <div class="invalid-feedback d-block">
@@ -36,7 +192,7 @@
                     {% endif %}
                 </div>
                 
-                <div class="mb-3">
+                <div class="mb-4">
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="fas fa-sign-in-alt me-2"></i> Sign In
                     </button>
@@ -57,4 +213,56 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const usernameInput = document.querySelector('input[name="username"]');
+    const passwordInput = document.querySelector('input[name="password"]');
+
+    // Add classes to form inputs
+    usernameInput.classList.add('form-control', 'input-with-icon');
+    passwordInput.classList.add('form-control', 'input-with-icon');
+
+    // Add placeholders
+    usernameInput.placeholder = 'Enter your username';
+    passwordInput.placeholder = 'Enter your password';
+
+    // Handle form submission
+    loginForm.addEventListener('submit', function(e) {
+        let isValid = true;
+
+        if (!usernameInput.value.trim()) {
+            usernameInput.classList.add('is-invalid', 'error-shake');
+            isValid = false;
+        }
+
+        if (!passwordInput.value.trim()) {
+            passwordInput.classList.add('is-invalid', 'error-shake');
+            isValid = false;
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+
+    // Remove error states on input
+    [usernameInput, passwordInput].forEach(input => {
+        input.addEventListener('input', function() {
+            this.classList.remove('is-invalid', 'error-shake');
+        });
+
+        input.addEventListener('focus', function() {
+            this.closest('.input-group').classList.add('focused');
+        });
+
+        input.addEventListener('blur', function() {
+            this.closest('.input-group').classList.remove('focused');
+        });
+    });
+});
+</script>
 {% endblock %}

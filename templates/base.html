@@ -9,8 +9,82 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .message-container {
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1050;
+            width: auto;
+            min-width: 300px;
+            text-align: center;
+            animation: slideDown 0.5s forwards;
+        }
+
+        @keyframes slideDown {
+            from {
+                top: -100px;
+                opacity: 0;
+            }
+            to {
+                top: 20px;
+                opacity: 1;
+            }
+        }
+
+        .message-hide {
+            animation: slideUp 0.5s forwards !important;
+        }
+
+        @keyframes slideUp {
+            from {
+                top: 20px;
+                opacity: 1;
+            }
+            to {
+                top: -100px;
+                opacity: 0;
+            }
+        }
+
+        .alert {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            border: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .alert-error, .alert-danger {
+            color: #fff;
+            background-color: rgba(220, 53, 69, 0.95);
+            border-color: rgba(220, 53, 69, 0.1);
+        }
+
+        .alert-error .btn-close, .alert-danger .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        .alert.show {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -72,12 +146,14 @@
     
     <div class="container mt-4">
         {% if messages %}
+        <div class="message-container">
             {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             {% endfor %}
+        </div>
         {% endif %}
         
         {% block content %}{% endblock %}
@@ -93,6 +169,28 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        // Enhanced auto-hide messages with animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            
+            alerts.forEach(function(alert) {
+                // Add initial animation class
+                alert.classList.add('animate__animated', 'animate__fadeIn');
+                
+                setTimeout(function() {
+                    // Add hide animation
+                    alert.classList.add('message-hide');
+                    
+                    // Remove alert after animation
+                    setTimeout(function() {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    }, 500);
+                }, 5000);
+            });
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
