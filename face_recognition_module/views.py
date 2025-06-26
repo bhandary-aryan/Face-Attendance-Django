@@ -165,3 +165,75 @@ def capture_and_recognize(request, class_schedule_id):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+
+# import qrcode
+# from io import BytesIO
+# from django.core.signing import Signer
+# from django.http import HttpResponse
+# from django.shortcuts import get_object_or_404
+# from authentication.models import Student
+
+# def generate_student_qr(request, student_id):
+#     student = get_object_or_404(Student, id=student_id)
+#     signer = Signer()
+#     token = signer.sign(str(student.student_id))
+    
+#     qr_img = qrcode.make(token)
+#     buffer = BytesIO()
+#     qr_img.save(buffer, format='PNG')
+#     buffer.seek(0)
+    
+#     return HttpResponse(buffer.getvalue(), content_type='image/png')
+
+
+
+from django.core.signing import Signer
+from django.urls import reverse
+from django.shortcuts import redirect
+import qrcode
+from io import BytesIO
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+
+signer = Signer()
+
+def generate_student_qr(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    token = signer.sign(student.id)
+
+    url = request.build_absolute_uri(
+        reverse('scan_qr_view') + f"?token={token}"
+    )
+
+    img = qrcode.make(url)
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    return HttpResponse(buffer.getvalue(), content_type='image/png')
+
+
+from django.core.signing import BadSignature
+from django.utils.timezone import now
+from core.models import Student, Attendance
+from django.http import HttpResponse
+
+def scan_qr_view(request):
+    token = request.GET.get('token')
+
+    if not token:
+        return HttpResponse("Invalid QR code")
+
+    try:
+        student_id = signer.unsign(token)
+        student = Student.objects.get(id=student_id)
+
+        # Mark attendance if not already present
+        today = now().date()
+        if not Attendance.objects.filter(student=student, date=today).exists():
+            Attendance.objects.create(student=student)
+
+        return render(request, 'core/scan_result.html', {'student': student})
+
+    except (BadSignature, Student.DoesNotExist):
+        return HttpResponse("Invalid or tampered QR code.")

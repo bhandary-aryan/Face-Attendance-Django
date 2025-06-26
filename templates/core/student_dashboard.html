@@ -164,8 +164,25 @@
             </div>
         </div>
     </div>
-    
-    <div class="col-md-4">
+
+<div style="max-width: 600px; margin: auto; padding: 20px; text-align: center;">
+    <h2>{{ student.name }}</h2>
+    <p>Student ID: {{ student_id }}</p>
+
+    <div style="margin: 20px 0;">
+        {% comment %} <h3>Your QR Code</h3>{% endcomment %}
+        <h3>{{ user }}'s QR Code:</h3> 
+        <img src="{% url 'student_qr' student.id %}" alt="QR Code" style="width: 250px; border: 2px solid #ccc; padding: 10px; border-radius: 8px;">
+    </div>
+</div>
+
+
+{% comment %} 
+<h3>{{ student.name }}'s QR Code:</h3>
+<img src="{% url 'student_qr' student.id %}" alt="QR Code"> {% endcomment %}
+
+
+    {% comment %} <div class="col-md-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">Attendance Summary</h5>
@@ -212,7 +229,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> {% endcomment %}
 
 {% block extra_js %}
 <script>

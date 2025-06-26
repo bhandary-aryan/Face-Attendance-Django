@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
+# import uuid
+
 
 class User(AbstractUser):
     USER_TYPE_CHOICES = (
@@ -59,6 +61,8 @@ class Student(models.Model):
     student_id = models.CharField(max_length=20, unique=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     courses = models.ManyToManyField(Course, related_name='students')
+    # uuid = models.UUIDField(default=uuid.uuid4, editable=False)  # ← remove unique=True temporarily
+
     
     def __str__(self):
         return f"{self.student_id} - {self.user.get_full_name()}"
