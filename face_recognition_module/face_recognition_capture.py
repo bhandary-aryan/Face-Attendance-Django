@@ -22,8 +22,8 @@ while True:
         qr_token = obj.data.decode('utf-8')
 
         try:
-            student_uuid = signer.unsign(qr_token)
-            student = Student.objects.get(uuid=student_uuid)
+            student_id = signer.unsign(qr_token)
+            student = Student.objects.get(uuid=student_id)
 
             # Mark attendance if not already marked
             if not Attendance.objects.filter(student=student, date=datetime.today().date()).exists():

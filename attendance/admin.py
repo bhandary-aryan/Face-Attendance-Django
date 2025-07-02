@@ -2,7 +2,7 @@ from django.contrib.admin import AdminSite, ModelAdmin
 from django.db.models import Count
 from django.utils import timezone
 from datetime import timedelta
-from .models import Student, Attendance
+from core.models import Student, Attendance
 
 class StudentAdmin(ModelAdmin):
     list_display = ('id', 'name', 'department')
