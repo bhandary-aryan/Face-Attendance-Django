@@ -3,6 +3,7 @@ from pyzbar.pyzbar import decode
 import django
 import os
 from datetime import datetime
+from django.utils import timezone
 
 # Django setup
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'FaceAttendance.settings')
@@ -28,7 +29,11 @@ while True:
 
                 # Mark attendance
                 if not Attendance.objects.filter(student=student, date=datetime.today().date()).exists():
-                    Attendance.objects.create(student=student)
+                    Attendance.objects.create(
+                        student=student,
+                        date=timezone.now().date(),
+                        time_in=timezone.now().time()
+                    )
                     print(f"[✔] Attendance marked for {student.user.get_full_name()}")
 
                 # Display student details

@@ -213,27 +213,75 @@ def generate_student_qr(request, student_id):
     return HttpResponse(buffer.getvalue(), content_type='image/png')
 
 
+from django.utils import timezone
 from django.core.signing import BadSignature
-from django.utils.timezone import now
-from core.models import Student, Attendance
-from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from core.models import Attendance, Student, ClassSchedule  # or correct path
+
+
+from django.utils import timezone
+from django.core.signing import BadSignature
+from django.shortcuts import get_object_or_404
+from core.models import Attendance, Student, ClassSchedule  # or correct path
 
 def scan_qr_view(request):
     token = request.GET.get('token')
+    if not token:
+        return HttpResponse("Invalid QR Code")
 
+    try:
+        student_id = signer.unsign(token)
+        student = Student.objects.select_related('user', 'department').get(id=student_id)
+
+        today = timezone.now().date()
+        now_time = timezone.now().time()
+
+        # 👇 Example: get the current class schedule
+        class_schedule = ClassSchedule.objects.filter(
+            # students=student,
+            start_time__lte=now_time,
+            end_time__gte=now_time,
+            # day=today.weekday()  # or however your schedule works
+        ).first()
+
+        if not class_schedule:
+            return HttpResponse("No active class schedule found.")
+
+        attendance, created = Attendance.objects.get_or_create(
+            # student=student,
+            class_schedule=class_schedule,
+            date=today,
+            defaults={
+                'time_in': now_time,
+                'status': 'present',
+                'face_confidence': 100.0  # or use actual detection data
+            }
+        )
+
+        return render(request, 'core/scan_result.html', {
+            'student': student,
+            'already_marked': not created
+        })
+
+    except (BadSignature, Student.DoesNotExist):
+        return HttpResponse("Invalid or tampered QR code")
+
+    
+
+
+
+
+from django.core.signing import BadSignature
+from django.shortcuts import render
+
+def student_id_card_view(request):
+    token = request.GET.get('token')
     if not token:
         return HttpResponse("Invalid QR code")
 
     try:
         student_id = signer.unsign(token)
-        student = Student.objects.get(id=student_id)
-
-        # Mark attendance if not already present
-        today = now().date()
-        if not Attendance.objects.filter(student=student, date=today).exists():
-            Attendance.objects.create(student=student)
-
+        student = Student.objects.select_related('user', 'department').get(id=student_id)
         return render(request, 'core/scan_result.html', {'student': student})
-
     except (BadSignature, Student.DoesNotExist):
-        return HttpResponse("Invalid or tampered QR code.")
+        return HttpResponse("Invalid or expired QR code")
