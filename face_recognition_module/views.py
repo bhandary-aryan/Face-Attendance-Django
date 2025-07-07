@@ -188,100 +188,139 @@ def capture_and_recognize(request, class_schedule_id):
 
 
 
-from django.core.signing import Signer
-from django.urls import reverse
-from django.shortcuts import redirect
-import qrcode
-from io import BytesIO
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
+# from django.core.signing import Signer
+# from django.urls import reverse
+# from django.shortcuts import redirect
+# import qrcode
+# from io import BytesIO
+# from django.http import HttpResponse
+# from django.shortcuts import get_object_or_404
 
-signer = Signer()
+# signer = Signer()
 
-def generate_student_qr(request, student_id):
-    student = get_object_or_404(Student, id=student_id)
-    token = signer.sign(student.id)
+# def generate_student_qr(request, student_id):
+#     student = get_object_or_404(Student, id=student_id)
+#     token = signer.sign(student.id)
 
-    url = request.build_absolute_uri(
-        reverse('scan_qr_view') + f"?token={token}"
-    )
+#     url = request.build_absolute_uri(
+#         reverse('scan_qr_view') + f"?token={token}"
+#     )
 
-    img = qrcode.make(url)
-    buffer = BytesIO()
-    img.save(buffer, format='PNG')
-    buffer.seek(0)
-    return HttpResponse(buffer.getvalue(), content_type='image/png')
-
-
-from django.utils import timezone
-from django.core.signing import BadSignature
-from django.shortcuts import get_object_or_404
-from core.models import Attendance, Student, ClassSchedule  # or correct path
+#     img = qrcode.make(url)
+#     buffer = BytesIO()
+#     img.save(buffer, format='PNG')
+#     buffer.seek(0)
+#     return HttpResponse(buffer.getvalue(), content_type='image/png')
 
 
-from django.utils import timezone
-from django.core.signing import BadSignature
-from django.shortcuts import get_object_or_404
-from core.models import Attendance, Student, ClassSchedule  # or correct path
+# from django.utils import timezone
+# from django.core.signing import BadSignature
+# from django.shortcuts import get_object_or_404
+# from core.models import Attendance, Student, ClassSchedule  # or correct path
 
-def scan_qr_view(request):
-    token = request.GET.get('token')
-    if not token:
-        return HttpResponse("Invalid QR Code")
 
-    try:
-        student_id = signer.unsign(token)
-        student = Student.objects.select_related('user', 'department').get(id=student_id)
 
-        today = timezone.now().date()
-        now_time = timezone.now().time()
 
-        # 👇 Example: get the current class schedule
-        class_schedule = ClassSchedule.objects.filter(
-            # students=student,
-            start_time__lte=now_time,
-            end_time__gte=now_time,
-            # day=today.weekday()  # or however your schedule works
-        ).first()
+# def scan_qr_view(request):
+#     token = request.GET.get('token')
+#     if not token:
+#         return HttpResponse("Invalid QR Code")
 
-        if not class_schedule:
-            return HttpResponse("No active class schedule found.")
+#     try:
+#         student_id = signer.unsign(token)
+#         student = Student.objects.select_related('user', 'department').get(id=student_id)
 
-        attendance, created = Attendance.objects.get_or_create(
-            # student=student,
-            class_schedule=class_schedule,
-            date=today,
-            defaults={
-                'time_in': now_time,
-                'status': 'present',
-                'face_confidence': 100.0  # or use actual detection data
-            }
-        )
+#         today = timezone.now().date()
+#         now_time = timezone.now().time()
 
-        return render(request, 'core/scan_result.html', {
-            'student': student,
-            'already_marked': not created
-        })
+#         # 👇 Example: get the current class schedule
+#         class_schedule = ClassSchedule.objects.filter(
+#             # students=student,
+#             start_time__lte=now_time,
+#             end_time__gte=now_time,
+#             # day=today.weekday()  # or however your schedule works
+#         ).first()
 
-    except (BadSignature, Student.DoesNotExist):
-        return HttpResponse("Invalid or tampered QR code")
+#         if not class_schedule:
+#             return HttpResponse("No active class schedule found.")
+
+#         attendance, created = Attendance.objects.get_or_create(
+#             # student=student,
+#             class_schedule=class_schedule,
+#             date=today,
+#             defaults={
+#                 'time_in': now_time,
+#                 'status': 'present',
+#                 'face_confidence': 100.0  # or use actual detection data
+#             }
+#         )
+
+#         return render(request, 'core/scan_result.html', {
+#             'student': student,
+#             'already_marked': not created
+#         })
+
+#     except (BadSignature, Student.DoesNotExist):
+#         return HttpResponse("Invalid or tampered QR code")
 
     
 
 
 
 
-from django.core.signing import BadSignature
-from django.shortcuts import render
+# from django.core.signing import BadSignature
+# from django.shortcuts import render
 
-def student_id_card_view(request):
-    token = request.GET.get('token')
-    if not token:
-        return HttpResponse("Invalid QR code")
+# def student_id_card_view(request):
+#     token = request.GET.get('token')
+#     if not token:
+#         return HttpResponse("Invalid QR code")
 
-    try:
-        student_id = signer.unsign(token)
-        student = Student.objects.select_related('user', 'department').get(id=student_id)
-        return render(request, 'core/scan_result.html', {'student': student})
-    except (BadSignature, Student.DoesNotExist):
-        return HttpResponse("Invalid or expired QR code")
+#     try:
+#         student_id = signer.unsign(token)
+#         student = Student.objects.select_related('user', 'department').get(id=student_id)
+#         return render(request, 'core/scan_result.html', {'student': student})
+#     except (BadSignature, Student.DoesNotExist):
+#         return HttpResponse("Invalid or expired QR code")
+
+
+import qrcode
+from io import BytesIO
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from core.models import Student, Attendance
+
+
+def generate_student_qr(request, student_id):
+    student = get_object_or_404(Student.objects.select_related('user', 'department'), id=student_id)
+
+    # 📊 Attendance summary
+    present_days = Attendance.objects.filter(student=student, status='present').count()
+    absent_days = Attendance.objects.filter(student=student, status='absent').count()
+    late_days = Attendance.objects.filter(student=student, status='late').count()
+
+    # 📄 Courses
+    courses = ", ".join([course.name for course in student.courses.all()])
+
+    # 🧾 QR data
+    details = f"""
+    Student ID: {student.student_id}
+    Name: {student.user.get_full_name()}
+    Faculty: {student.department.name}
+    Phone: {student.user.phone_number}
+    Address: {student.user.address}
+    Courses: {courses}
+
+    📅 Attendance Summary:
+    ✔️ Present Days: {present_days}
+    ❌ Absent Days: {absent_days}
+    🕐 Late Days: {late_days}
+    """
+
+    img = qrcode.make(details.strip())
+
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+
+    return HttpResponse(buffer.getvalue(), content_type='image/png')

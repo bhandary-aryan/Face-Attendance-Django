@@ -12,7 +12,7 @@ urlpatterns = [
 
     path('student/<int:student_id>/qr/', views.generate_student_qr, name='student_qr'),
 
-    path('attendance/scan/', views.scan_qr_view, name='scan_qr_view'),
+    # path('attendance/scan/', views.scan_qr_view, name='scan_qr_view'),
 
 
 ]
